@@ -1,0 +1,167 @@
+.container{
+    width: 100%;
+    height: 100vh;
+    background-image: linear-gradient(to right, #f3b07c, #fdc283); /* this is the background gradient horizontally */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden; /* this is to hide any overflowing content (like the weather image) */
+}
+
+/* this is to style the weather image */
+.weather img{
+    margin-top: -9rem; /* this is to move the weather image upwards to overlap with the weather app container */
+}
+
+
+/* this is to style the weather app container */
+.weather-app{
+    width: 35rem;
+    height: 65rem;
+    background-image: linear-gradient(to top, #f3b07c, #fdc283); /* this is the background gradient vertically */
+    border-radius: 3rem;
+    display: flex;
+    flex-direction: column; /* this is to stack the child elements vertically */
+    align-items: center;
+    padding: 2rem;
+    box-shadow: -3rem 1rem 6rem rgba(0, 0, 0, 0.1); /* this is to add a shadow effect to the weather app */
+    position: relative;
+}
+
+/* this is to style the search section of the weather app */
+.search{
+    display: flex;
+    flex-direction: column; /* align the search input and button vertically */
+    row-gap: 1rem; /* add some space between the input and button */
+}
+
+/* this is to style the search text and icon */
+.search-top{
+    display: flex;
+    align-items: center;
+    column-gap: 1rem; /* add some space between the input and button(WE USED column-gap BECAUSE WE DIDN'T USE flex-direction) */
+}
+
+/* this is to style the search icon */
+.search-top i{
+    font-size: 2rem;
+    color: #2f2e57;
+}
+
+/* this is to style the search text */
+.search-top div{
+    font-size: 1.6rem;
+    color: #484569;
+    letter-spacing: 0.1rem;
+}
+
+/* this is to style the searchbar input */
+.search-bar{
+    position: relative; /* this is to position the search icon absolutely within the search bar */
+}
+
+.search-bar input{
+    width: 25rem;
+    height: 3.5rem;
+    background-color: transparent;
+    border: .2rem solid #676394;
+    border-radius: 3rem;
+    outline: none;
+    padding: 1rem 3rem 1rem 1rem; /* (top, right, bottom, left) */
+    font-size: 1.6rem;
+    color: #484569;
+}
+
+/* this is to style the searchbar placeholder */
+.search-bar input::placeholder{
+    font-size: 1.4rem;
+    color: #676394;
+    letter-spacing: 0.1rem;
+}
+
+.search-bar input:focus::placeholder{
+    color: transparent; /* this is to hide the placeholder text when the input is focused */
+}
+
+
+/* this is to style the search bar icon */
+.search-bar i{
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 1.5rem;
+    font-size: 1.5rem;
+    color: #2f2e57;
+    cursor: pointer;
+}
+
+
+/* this is to style the weather type section */
+.weather-type{
+    position: absolute;
+    top: 48%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2rem;
+    color: #484569;
+}                                                               
+
+/* this is to style the temperature section */
+.temp {
+    position: absolute;
+    top: 55%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9rem;
+    background-image: linear-gradient(to right, #2f2e57, #605d80); /* this is the background gradient horizontally */
+    -webkit-background-clip: text; /* this is to clip the background to the text */
+    -webkit-text-fill-color: transparent; /* this is to make the text color transparent so that the background gradient is visible */
+    text-shadow: .5rem .5rem 1rem rgba(0, 0, 0, 0.1); /* this is to add a shadow effect to the temperature text */
+}
+
+
+/* this is to style the weather date section */
+.weather-date {
+    position: absolute;
+    bottom: 22%;
+    font-size: 1.6rem;
+    color: #484569;
+}
+
+/* this is to style the weather data section and its child elements(it's divs) */
+.weather-data {
+    width: 100%;
+    position: absolute;
+    bottom: 2rem;
+    display: flex;
+    column-gap: 2rem;
+    padding: 0 2rem;
+}
+
+.weather-data > div{
+    flex: 1; /* this is to make each data item take equal space */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    row-gap: 1.5rem;
+    background-color: rgba(255, 255, 255, 0.2); /* this is to add a semi-transparent background to the data items */
+    padding: 1rem;
+    border-radius: 1rem;
+}
+
+/* this is to style the data name text and data value text */
+.data-name{
+    font-size: 1.6rem;
+    color: #605d80;
+}
+
+.weather-data i{
+    font-size: 2rem;
+    color: #fff;
+    text-shadow: -0.3rem 0.3rem 0.5rem rgba(0, 0, 0, 0.1); /* this is to add a shadow effect to the data icons */
+}
+
+.data{
+    font-size: 2rem;
+    color: #2f2e57;
+}
