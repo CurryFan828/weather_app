@@ -11,6 +11,7 @@
 /* this is to style the weather image */
 .weather img{
     margin-top: -9rem; /* this is to move the weather image upwards to overlap with the weather app container */
+    overflow: hidden;
 }
 
 
@@ -94,6 +95,21 @@
     color: #2f2e57;
     cursor: pointer;
 }
+
+/* this is to style the loader */
+.loader {
+    width: 5rem;
+    margin-top: 10rem;
+}
+
+/* this is to style the not found page */
+.not-found { 
+    font-size: 3rem;
+    color: #484569;
+    margin-top: 5rem;
+    text-shadow: -0.3rem .5rem 1rem rgba(0, 0, 0, 0.2);
+}
+
 
 
 /* this is to style the weather type section */
