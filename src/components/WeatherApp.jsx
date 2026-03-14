@@ -1,74 +1,130 @@
-import cloudy from "../assets/images/cloudy.png"
-import sunny from "../assets/images/sunny.png"
-import rainy from "../assets/images/rainy.png"
-import snowy from "../assets/images/snowy.png"
-// import thunderstorm from "../assets/images/thunderstorm.png"
-// import foggy from "../assets/images/foggy.png"
-import loadingGif from "../assets/images/loading.gif"
-import { useState, useEffect } from "react"
-
+import cloudy from "../assets/images/cloudy.png";
+import sunny from "../assets/images/sunny.png";
+import rainy from "../assets/images/rainy.png";
+import snowy from "../assets/images/snowy.png";
+import loadingGif from "../assets/images/loading.gif";
+import { useState, useEffect, useRef } from "react";
 
 const WeatherApp = () => {
-    const API_KEY = import.meta.env.VITE_WEATHER_API_KEY; // My OpenWeather Key
+    const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
     const BASE_URL = `https://api.openweathermap.org/data/2.5/weather`;
 
-    const [data, setData] = useState({})
-    const [location, setLocation] = useState('')
-    const [loading, setLoading] = useState(false)
+    const [data, setData] = useState({});
+    const [location, setLocation] = useState('');
+    const [lastLocation, setLastLocation] = useState('New York');
+    const [loading, setLoading] = useState(false);
+    const [unit, setUnit] = useState('metric');
+    const [citySuggestions, setCitySuggestions] = useState([]);
+    const searchRef = useRef(null);
 
+    // Fetch weather whenever unit or lastLocation changes
+    useEffect(() => {
+        const fetchWeather = async () => {
+            setLoading(true);
+            const url = `${BASE_URL}?q=${encodeURIComponent(lastLocation)}&units=${unit}&appid=${API_KEY}`;
+            try {
+                const res = await fetch(url);
+                const weatherData = await res.json();
+                setData(weatherData);
+            } catch (err) {
+                console.error(err);
+                setData({ notFound: true, errorMsg: "City Not Found😒" });
+            }
+            setLoading(false);
+        };
+        fetchWeather();
+    }, [unit, lastLocation]);
 
-    useEffect(() =>{
-        const fetchDefaultWeather = async () => {
-            setLoading(true)
-            const defaultLocation = "New York"
-            const url = `${BASE_URL}?q=${defaultLocation}&units=metric&appid=${API_KEY}`
-            const res = await fetch(url)
-            const defaultData = await res.json()
-            setData(defaultData)
-            setLoading(false)
+    // Close city suggestions when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (searchRef.current && !searchRef.current.contains(event.target)) {
+                setCitySuggestions([]);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // Debounce helper
+    const debounce = (func, delay) => {
+        let timeoutId;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => func(...args), delay);
+        };
+    };
+
+    // Fetch city suggestions from OpenWeather Geocoding API
+    const fetchCitySuggestions = async (query) => {
+        const trimmedQuery = query.trim();
+        if (trimmedQuery === "") {
+            setCitySuggestions([]);
+            return;
         }
 
-        fetchDefaultWeather()
-    }, [])
-
-    const search = async () => {
-        if(location.trim() !== ""){
-            const url = `${BASE_URL}?q=${location}&units=metric&appid=${API_KEY}`        
-            const res = await fetch(url)
-            const searchData = await res.json()
-
-            if(searchData.cod !== 200) {
-                setData({notFound: true})
-            } else{
-                setData(searchData)
-                setLocation('')
-            }  
-            setLoading(false)          
+        try {
+            const geoURL = `http://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(trimmedQuery)}&limit=5&appid=${API_KEY}`;
+            const geoRes = await fetch(geoURL);
+            const geoData = await geoRes.json();
+            setCitySuggestions(geoData.length > 0 ? geoData : []);
+        } catch (err) {
+            console.error(err);
+            setCitySuggestions([]);
         }
-    }
+    };
+
+    const debouncedFetchSuggestions = debounce(fetchCitySuggestions, 300);
 
     const handleInputChange = (e) => {
-        setLocation(e.target.value)
+        const value = e.target.value;
+        setLocation(value);
+        debouncedFetchSuggestions(value);
+    };
 
-    }
-
-    const handleKeyDown = (e) => {
-        if(e.key === "Enter"){
-            search()
+    const handleKeyDown = async (e) => {
+        if (e.key === "Enter") {
+            if (citySuggestions.length > 0) selectCity(citySuggestions[0]);
+            else setData({ notFound: true, errorMsg: "City Not Found😒" });
         }
-    }
+    };
+
+    // Fetch weather for a selected city
+    const selectCity = async (city) => {
+        setCitySuggestions([]); // hide dropdown
+        setLocation('');        // clear input
+        setLoading(true);
+
+        try {
+            // Build the weather URL here
+            const weatherURL = `${BASE_URL}?lat=${city.lat}&lon=${city.lon}&units=${unit}&appid=${API_KEY}`;
+
+            const res = await fetch(weatherURL);
+            const weatherData = await res.json();
+
+            if (!res.ok || weatherData.cod === "404") {
+                // Show error if API returns 404 (like a state-only selection)
+                setData({ notFound: true, errorMsg: "City Not Found😒 (please select a city, not a state)" });
+            } else {
+                setData(weatherData);
+                // Display city name + state if available, otherwise country
+                setLastLocation(`${city.name}${city.state ? `, ${city.state}` : ''}, ${city.country}`);
+            }
+        } catch (err) {
+            console.error(err);
+            setData({ notFound: true, errorMsg: "City Not Found😒" });
+        }
+
+        setLoading(false);
+    };
 
 
-    const weatherImages = {
-        Clear: sunny,
-        Clouds: cloudy,
-        Rain: rainy,
-        Snow: snowy,
-        Haze: cloudy,
-        Mist: cloudy
-    }
+    const toggleUnit = (selectedUnit) => {
+        if (selectedUnit !== unit) setUnit(selectedUnit);
+    };
 
-    const weatherImage = data.weather ? weatherImages[data.weather[0].main] : null
+    const weatherImages = { Clear: sunny, Clouds: cloudy, Rain: rainy, Snow: snowy, Haze: cloudy, Mist: cloudy };
+    const weatherImage = data.weather ? weatherImages[data.weather[0].main] : null;
 
     const backgroundImages = {
         Clear: 'linear-gradient(to right, #f3b07c, #fcd283)',
@@ -77,77 +133,93 @@ const WeatherApp = () => {
         Snow: 'linear-gradient(to right, #aff2ff, #fff)',
         Haze: 'linear-gradient(to right, #57d6d4, #71eeec)',
         Mist: 'linear-gradient(to right, #57d6d4, #71eeec)'
-    }
+    };
+    const backgroundImage = data.weather ? backgroundImages[data.weather[0].main] : 'linear-gradient(to right, #f3b07c, #fcd283)';
 
-    const backgroundImage = data.weather ? backgroundImages[data.weather[0].main] : 'linear-gradient(to right, #f3b07c, #fcd283)'
-
-    const currentDate = new Date()
-    const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-    const dayOfWeek = daysOfWeek[currentDate.getDay()]
-    const month = months[currentDate.getMonth()]
-    const dayOfMonth = currentDate.getDate()
-
-    const formattedDate = `${dayOfWeek}, ${dayOfMonth} ${month}`
-
+    const currentDate = new Date();
+    const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const formattedDate = `${daysOfWeek[currentDate.getDay()]}, ${currentDate.getDate()} ${months[currentDate.getMonth()]}`;
 
     return (
         <div className="container" style={{backgroundImage}}>
-            <div className="weather-app" 
-                style={{backgroundImage: backgroundImage && backgroundImage.replace ? backgroundImage.replace("to right", "to top") : null}}
-            >
-                {/* Search Bar for the weather app */}
+            <div className="weather-app" style={{backgroundImage: backgroundImage && backgroundImage.replace ? backgroundImage.replace("to right", "to top") : null}}>
+
                 <div className="search">
                     <div className="search-top">
-                        <i className="fa-solid fa-location-dot"></i> {/* this is a location icon */}
+                        <i className="fa-solid fa-location-dot"></i>
                         <div className="location">{data.name}</div>
                     </div>
 
-                    <div className="search-bar">
-                        <input type="text" placeholder="Enter Location" value={location} onChange={handleInputChange} onKeyDown={handleKeyDown}/>
-                        <i className="fa-solid fa-magnifying-glass" onClick={search}></i> {/* this is a search icon */}
+                    <div className="search-bar" style={{ position: "relative" }} ref={searchRef}>
+                        <input
+                            type="text"
+                            placeholder="Enter Location"
+                            value={location}
+                            onChange={handleInputChange}
+                            onKeyDown={handleKeyDown}
+                        />
+                        <i className="fa-solid fa-magnifying-glass" onClick={() => {
+                            if(citySuggestions.length > 0) selectCity(citySuggestions[0]);
+                        }}></i>
+
+                        {citySuggestions.length > 0 && (
+                            <div className="city-suggestions">
+                                {citySuggestions.map((city, index) => (
+                                    <div
+                                        key={index}
+                                        className="city-suggestion"
+                                        onClick={() => selectCity(city)}
+                                    >
+                                        {city.name}{city.state ? `, ${city.state}` : ''} ({city.country})
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {loading ? (<img className="loader" src={loadingGif} alt="loading" />
+                {loading ? (
+                    <div className="loader-container">
+                        <img className="loader" src={loadingGif} alt="loading" />
+                    </div>
                 ) : data.notFound ? (
-                    <div className="not-found">City Not Found😒</div>
+                    <div className="not-found">{data.errorMsg || "City Not Found😒"}</div>
                 ) : (
                     <>
-                        {/* Weather Information */}
                         <div className="weather">
-                            <img src={weatherImage} alt="" />
+                            {weatherImage && <img src={weatherImage} alt={data.weather ? data.weather[0].main : ""} />}
                             <div className="weather-type">{data.weather ? data.weather[0].main : null}</div>
-                            <div className="temp">{data.main ? `${Math.floor(data.main.temp)}°`: null}</div>
+                            <div className="temp">{data.main ? `${Math.floor(data.main.temp)}°` : null}</div>
                         </div>
 
-                        {/* Date Information */}
                         <div className="weather-date">
                             <p>{formattedDate}</p>
+                            <div className="unit-toggle-container">
+                                <button className={`unit-option ${unit === "metric" ? "active" : ""}`} onClick={() => toggleUnit("metric")}>°C</button>
+                                <span className="unit-divider">|</span>
+                                <button className={`unit-option ${unit === "imperial" ? "active" : ""}`} onClick={() => toggleUnit("imperial")}>°F</button>
+                            </div>
                         </div>
 
-                        {/* Weather Data such as humidity, wind speed, etc. */}
                         <div className="weather-data">
-                            {/*Humidity Data*/}
                             <div className="humidity">
                                 <div className="data-name">Humidity</div>
-                                <i className="fa-solid fa-droplet"></i> {/* this is a humidity icon */}
+                                <i className="fa-solid fa-droplet"></i>
                                 <div className="data">{data.main ? data.main.humidity : null}%</div>
                             </div>
 
-                            {/* Wind Speed Data */} 
                             <div className="wind">
                                 <div className="data-name">Wind</div>
-                                <i className="fa-solid fa-wind"></i> {/* this is a wind icon */}
-                                <div className="data">{data.wind ? data.wind.speed : null} km/h</div>               
+                                <i className="fa-solid fa-wind"></i>
+                                <div className="data">{data.wind ? `${data.wind.speed} ${unit === "metric" ? "m/s" : "mph"}` : null}</div>
                             </div>
                         </div>
                     </>
                 )}
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default WeatherApp
+export default WeatherApp;

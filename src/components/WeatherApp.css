@@ -181,3 +181,64 @@
     font-size: 2rem;
     color: #2f2e57;
 }
+
+
+.unit-toggle-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem; /* spacing below the date */
+}
+
+.unit-option {
+    background-color: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 1rem;
+    padding: 0.5rem 1rem;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: #484569;
+    transition: all 0.2s ease;
+}
+
+.unit-option:hover {
+    background-color: rgba(47, 46, 87, 0.8); /* darker background on hover */
+    color: #fff; /* text becomes white */
+    transform: scale(1.05); /* slight grow effect */
+}
+
+.unit-option.active {
+    background-color: #2f2e57;
+    color: #fff;
+}
+
+.unit-divider {
+    font-size: 1.4rem;
+    color: #484569;
+}
+
+.city-suggestions {
+    max-height: 150px;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 1rem;
+    margin-top: 0.5rem;
+    width: 100%;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    position: absolute;
+    z-index: 10;
+}
+
+.city-suggestion {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    color: #2f2e57;
+    transition: background 0.2s;
+}
+
+.city-suggestion:hover {
+    background-color: #f3b07c;
+    color: #484569;
+    border-radius: 1rem;
+}
