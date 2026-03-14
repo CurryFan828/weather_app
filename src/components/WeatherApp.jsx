@@ -15,6 +15,8 @@ const WeatherApp = () => {
     const [loading, setLoading] = useState(false);
     const [unit, setUnit] = useState('metric');
     const [citySuggestions, setCitySuggestions] = useState([]);
+    const [selectedCity, setSelectedCity] = useState({ name: 'New York', state: '', country: 'US' });
+
     const searchRef = useRef(null);
 
     // Fetch weather whenever unit or lastLocation changes
@@ -28,7 +30,7 @@ const WeatherApp = () => {
                 setData(weatherData);
             } catch (err) {
                 console.error(err);
-                setData({ notFound: true, errorMsg: "City Not Found😒" });
+                setData({ notFound: true });
             }
             setLoading(false);
         };
@@ -55,7 +57,7 @@ const WeatherApp = () => {
         };
     };
 
-    // Fetch city suggestions from OpenWeather Geocoding API
+    // Fetch city suggestions
     const fetchCitySuggestions = async (query) => {
         const trimmedQuery = query.trim();
         if (trimmedQuery === "") {
@@ -84,40 +86,38 @@ const WeatherApp = () => {
 
     const handleKeyDown = async (e) => {
         if (e.key === "Enter") {
-            if (citySuggestions.length > 0) selectCity(citySuggestions[0]);
-            else setData({ notFound: true, errorMsg: "City Not Found😒" });
+            if (citySuggestions.length > 0) {
+                selectCity(citySuggestions[0]);
+            } else {
+                setData({ notFound: true });
+            }
         }
     };
 
-    // Fetch weather for a selected city
     const selectCity = async (city) => {
-        setCitySuggestions([]); // hide dropdown
-        setLocation('');        // clear input
+        setCitySuggestions([]);
+        setLocation('');
         setLoading(true);
 
         try {
-            // Build the weather URL here
             const weatherURL = `${BASE_URL}?lat=${city.lat}&lon=${city.lon}&units=${unit}&appid=${API_KEY}`;
-
             const res = await fetch(weatherURL);
             const weatherData = await res.json();
 
-            if (!res.ok || weatherData.cod === "404") {
-                // Show error if API returns 404 (like a state-only selection)
-                setData({ notFound: true, errorMsg: "City Not Found😒 (please select a city, not a state)" });
+            if (weatherData.cod !== 200) {
+                setData({ notFound: true });
             } else {
                 setData(weatherData);
-                // Display city name + state if available, otherwise country
                 setLastLocation(`${city.name}${city.state ? `, ${city.state}` : ''}, ${city.country}`);
+                setSelectedCity(city); // <-- save selected city for top display
             }
         } catch (err) {
             console.error(err);
-            setData({ notFound: true, errorMsg: "City Not Found😒" });
+            setData({ notFound: true });
         }
 
         setLoading(false);
     };
-
 
     const toggleUnit = (selectedUnit) => {
         if (selectedUnit !== unit) setUnit(selectedUnit);
@@ -148,7 +148,9 @@ const WeatherApp = () => {
                 <div className="search">
                     <div className="search-top">
                         <i className="fa-solid fa-location-dot"></i>
-                        <div className="location">{data.name}</div>
+                        <div className="location">
+                            {selectedCity.name}{selectedCity.state ? `, ${selectedCity.state}` : `, ${selectedCity.country}`}
+                        </div>
                     </div>
 
                     <div className="search-bar" style={{ position: "relative" }} ref={searchRef}>
@@ -184,7 +186,7 @@ const WeatherApp = () => {
                         <img className="loader" src={loadingGif} alt="loading" />
                     </div>
                 ) : data.notFound ? (
-                    <div className="not-found">{data.errorMsg || "City Not Found😒"}</div>
+                    <div className="not-found">City Not Found😒</div>
                 ) : (
                     <>
                         <div className="weather">
