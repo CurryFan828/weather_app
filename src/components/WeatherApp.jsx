@@ -66,7 +66,7 @@ const WeatherApp = () => {
         }
 
         try {
-            const geoURL = `http://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(trimmedQuery)}&limit=5&appid=${API_KEY}`;
+            const geoURL = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(trimmedQuery)}&limit=5&appid=${API_KEY}`;
             const geoRes = await fetch(geoURL);
             const geoData = await geoRes.json();
             setCitySuggestions(geoData.length > 0 ? geoData : []);
